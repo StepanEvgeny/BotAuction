@@ -5,6 +5,7 @@ import schedule
 import threading
 import time
 from config import *
+from aiogram import types
 
 bot = TeleBot(API_TOKEN)
 
@@ -81,6 +82,23 @@ def callback_query(call):
 
 def polling_thread():
     bot.polling(none_stop=True)
+
+@bot.message_handler(commands=['add'])
+async def handle_photo(message: types.Message):
+    # Получаем файл изображения
+    photo = message.photo[-1]  # Берем изображение наивысшего качества
+    file_info = await bot.get_file(photo.file_id)
+    
+    # Формируем путь для сохранения файла
+    file_path = file_info.file_path
+    file_name = f"{photo.file_id}.jpg"
+    save_path = os.path.join(prizes_img, file_name)
+    
+    # Скачиваем файл
+    await bot.download_file(file_path, save_path)
+    
+    # Отправляем подтверждение
+    await message.reply(f"Изображение сохранено как {file_name}.")
 
 if __name__ == '__main__':
     manager = DatabaseManager(DATABASE)
